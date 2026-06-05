@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Cambios — Modelo de Oferta Pública</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --border: #E2E0D8;
+    --border-strong: #C8C5BB;
+    --text: #1A1917;
+    --text-muted: #6B6A65;
+    --text-hint: #9E9D97;
+    --accent: #1D4ED8;
+    --accent-bg: #EFF6FF;
+    --accent-border: #BFDBFE;
+    --pending-bg: #FFF7ED;
+    --pending-text: #92400E;
+    --pending-border: #FED7AA;
+    --approved-bg: #F0FDF4;
+    --approved-text: #14532D;
+    --approved-border: #BBF7D0;
+    --implemented-bg: #EFF6FF;
+    --implemented-text: #1E3A5F;
+    --implemented-border: #BFDBFE;
+    --add-bg: #F0FDF4;
+    --add-text: #14532D;
+    --mod-bg: #FFF7ED;
+    --mod-text: #92400E;
+    --del-bg: #FEF2F2;
+    --del-text: #7F1D1D;
+    --font: 'IBM Plex Sans', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+    --radius: 6px;
+    --radius-lg: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-logo {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .header-sep { width: 1px; height: 24px; background: var(--border); }
+  .header-title { font-size: 15px; font-weight: 500; color: var(--text); }
+  .header-nav { margin-left: auto; display: flex; gap: 4px; }
+  .nav-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    transition: background 0.15s, color 0.15s;
+  }
+  .nav-btn:hover { background: var(--bg); color: var(--text); }
+  .nav-btn.active { background: var(--bg); color: var(--text); }
+
+  /* LAYOUT */
+  .main { max-width: 860px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+
+  /* SECTION PANELS */
+  .panel { display: none; }
+  .panel.visible { display: block; }
+
+  /* FORM */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+  }
+  .form-header { margin-bottom: 1.75rem; }
+  .form-header h2 { font-size: 17px; font-weight: 600; color: var(--text); }
+  .form-header p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+  .form-row { margin-bottom: 1.25rem; }
+  .form-row.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  input[type="text"],
+  select,
+  textarea {
+    width: 100%;
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    appearance: none;
+  }
+  input[type="text"]:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(29,78,216,0.1);
+  }
+  input::placeholder, textarea::placeholder { color: var(--text-hint); }
+  textarea { resize: vertical; min-height: 100px; }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B6A65' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 32px; cursor: pointer; }
+
+  /* BIPS field */
+  .bips-help { font-size: 12px; color: var(--text-hint); margin-top: 5px; }
+  .bips-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .bip-tag {
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    color: var(--accent);
+    font-size: 12px;
+    font-family: var(--mono);
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .bip-tag button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--accent);
+    padding: 0;
+    font-size: 14px;
+    line-height: 1;
+    opacity: 0.6;
+    transition: opacity 0.1s;
+  }
+  .bip-tag button:hover { opacity: 1; }
+
+  .tipo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tipo-option { display: none; }
+  .tipo-option + label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 8px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    background: var(--bg);
+  }
+  .tipo-option + label:hover { border-color: var(--border-strong); color: var(--text); }
+  .tipo-option:checked + label { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+  .tipo-icon { font-size: 20px; }
+
+  .form-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .btn-secondary {
+    background: none;
+    border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 18px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--text-muted); color: var(--text); }
+  .btn-primary {
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: #fff;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 20px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: opacity 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--text);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 12px 18px;
+    border-radius: var(--radius);
+    z-index: 999;
+    transform: translateY(12px);
+    opacity: 0;
+    transition: all 0.25s;
+    pointer-events: none;
+    max-width: 320px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { background: #991B1B; }
+  .toast.success { background: #14532D; }
+
+  /* LOADING SPINNER */
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* LISTADO */
+  .list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .list-title { font-size: 17px; font-weight: 600; }
+  .list-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-select {
+    font-family: var(--font);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 6px 28px 6px 10px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B6A65' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    cursor: pointer;
+  }
+  .btn-refresh {
+    background: none;
+    border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-refresh:hover { color: var(--text); border-color: var(--text-muted); }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--bg); border-bottom: 1px solid var(--border); }
+  th {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 10px 16px;
+    text-align: left;
+    white-space: nowrap;
+  }
+  td {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--bg); }
+
+  .bips-cell { display: flex; flex-wrap: wrap; gap: 4px; }
+  .bip-pill {
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 100px;
+    border: 1px solid var(--accent-border);
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .badge-pendiente { background: var(--pending-bg); color: var(--pending-text); border: 1px solid var(--pending-border); }
+  .badge-aprobado { background: var(--approved-bg); color: var(--approved-text); border: 1px solid var(--approved-border); }
+  .badge-implementado { background: var(--implemented-bg); color: var(--implemented-text); border: 1px solid var(--implemented-border); }
+  .badge-agregar { background: var(--add-bg); color: var(--add-text); }
+  .badge-modificar { background: var(--mod-bg); color: var(--mod-text); }
+  .badge-eliminar { background: var(--del-bg); color: var(--del-text); }
+  .badge-fusionar { background: #F5F3FF; color: #4C1D95; }
+
+  .programa-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr auto;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  .btn-add-programa {
+    background: none;
+    border: 1px dashed var(--border-strong);
+    color: var(--text-muted);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.15s;
+    margin-top: 4px;
+  }
+  .btn-add-programa:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+  .btn-remove-programa {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-hint);
+    border-radius: var(--radius);
+    cursor: pointer;
+    padding: 6px 10px;
+    font-size: 14px;
+    line-height: 1;
+    transition: all 0.15s;
+  }
+  .btn-remove-programa:hover { border-color: #E24B4A; color: #E24B4A; }
+
+  .empty-state {
+    text-align: center;
+    padding: 3.5rem 2rem;
+    color: var(--text-hint);
+  }
+  .empty-state p { font-size: 14px; margin-top: 8px; }
+
+  .loading-row td { text-align: center; color: var(--text-hint); font-size: 13px; padding: 3rem; }
+
+  .text-desc { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* CONFIGURACIÓN MODAL */
+  .config-banner {
+    background: var(--pending-bg);
+    border: 1px solid var(--pending-border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--pending-text);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .config-banner.hidden { display: none; }
+  .config-link { color: var(--pending-text); font-weight: 600; text-decoration: underline; cursor: pointer; white-space: nowrap; }
+
+  .config-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem 2rem;
+    margin-bottom: 2rem;
+    display: none;
+  }
+  .config-panel.visible { display: block; }
+  .config-panel h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .config-panel p { font-size: 13px; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.6; }
+  .config-panel ol { padding-left: 1.25rem; font-size: 13px; color: var(--text-muted); line-height: 2; }
+  .config-panel ol li { margin-bottom: 2px; }
+  .config-panel code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--text);
+  }
+  .url-input-row { display: flex; gap: 8px; margin-top: 1rem; }
+  .url-input-row input { flex: 1; }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .form-row.two-col { grid-template-columns: 1fr; }
+    .tipo-grid { grid-template-columns: 1fr 1fr 1fr; }
+    .header { padding: 0 1rem; }
+    .main { padding: 1.5rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-logo">Oferta Pública</span>
+  <div class="header-sep"></div>
+  <span class="header-title">Registro de cambios</span>
+  <nav class="header-nav">
+    <button class="nav-btn active" id="btn-form" onclick="showPanel('form')">Nueva solicitud</button>
+    <button class="nav-btn" id="btn-list" onclick="showPanel('list')">Ver solicitudes</button>
+  </nav>
+</div>
+
+<main class="main">
+
+  <!-- CONFIG BANNER -->
+  <div class="config-banner" id="config-banner">
+    <span>⚠️ Aún no has configurado la URL de Google Sheets. Las solicitudes no se podrán enviar.</span>
+    <span class="config-link" onclick="toggleConfig()">Configurar ahora →</span>
+  </div>
+
+  <!-- CONFIG PANEL -->
+  <div class="config-panel" id="config-panel">
+    <h3>Conectar con Google Sheets</h3>
+    <p>Para que este formulario funcione, necesitas crear un Apps Script en tu Google Sheet y pegar la URL aquí. Sigue estos pasos:</p>
+    <ol>
+      <li>Crea una Google Sheet con estas columnas en el orden exacto:<br>
+        <code>Fecha</code> | <code>Solicitante</code> | <code>BIPS</code> | <code>Tipo</code> | <code>Descripción</code> | <code>Estado</code></li>
+      <li>En el menú <strong>Extensiones → Apps Script</strong>, pega el código que está en <code>apps_script.gs</code> (incluido junto a este archivo).</li>
+      <li>Haz clic en <strong>Implementar → Nueva implementación</strong>, tipo "Aplicación web", acceso "Cualquier persona".</li>
+      <li>Copia la URL generada y pégala aquí:</li>
+    </ol>
+    <div class="url-input-row">
+      <input type="text" id="sheets-url" placeholder="https://script.google.com/macros/s/AKf..." />
+      <button class="btn-primary" onclick="saveUrl()">Guardar</button>
+    </div>
+  </div>
+
+  <!-- PANEL FORMULARIO -->
+  <div class="panel visible" id="panel-form">
+    <div class="form-card">
+      <div class="form-header">
+        <h2>Nueva solicitud de cambio</h2>
+        <p>Completa todos los campos para registrar tu solicitud.</p>
+      </div>
+
+      <div class="form-row">
+        <label for="solicitante">Nombre del solicitante</label>
+        <input type="text" id="solicitante" placeholder="Ej: María González" />
+      </div>
+
+      <div class="form-row">
+        <label>Tipo de cambio</label>
+        <div class="tipo-grid">
+          <div>
+            <input type="radio" name="tipo" id="tipo-agregar" value="Agregar" class="tipo-option">
+            <label for="tipo-agregar"><span class="tipo-icon">＋</span>Agregar</label>
+          </div>
+          <div>
+            <input type="radio" name="tipo" id="tipo-modificar" value="Modificar" class="tipo-option">
+            <label for="tipo-modificar"><span class="tipo-icon">✎</span>Modificar</label>
+          </div>
+          <div>
+            <input type="radio" name="tipo" id="tipo-eliminar" value="Eliminar" class="tipo-option">
+            <label for="tipo-eliminar"><span class="tipo-icon">✕</span>Eliminar</label>
+          </div>
+          <div>
+            <input type="radio" name="tipo" id="tipo-fusionar" value="Fusionar" class="tipo-option">
+            <label for="tipo-fusionar"><span class="tipo-icon">⇌</span>Fusionar</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campos estándar (todos excepto Fusionar) -->
+      <div id="campos-estandar">
+        <div class="form-row">
+          <label>Código(s) BIPS</label>
+          <input type="text" id="bip-input" placeholder="Escribe un código y presiona Enter o coma" />
+          <p class="bips-help">Puedes agregar uno o más códigos BIPS.</p>
+          <div class="bips-tags" id="bips-tags"></div>
+        </div>
+      </div>
+
+      <!-- Campos específicos Fusionar -->
+      <div id="campos-fusionar" style="display:none">
+        <div class="form-row">
+          <label>Programas a fusionar</label>
+          <p class="bips-help" style="margin-bottom:8px">Agrega cada programa con su código BIPS y nombre.</p>
+          <div id="programas-list"></div>
+          <button type="button" class="btn-add-programa" onclick="addPrograma()">＋ Agregar programa</button>
+        </div>
+        <div class="form-row">
+          <label>Código BIPS resultante</label>
+          <input type="text" id="bip-final" placeholder="Código BIPS del programa fusionado" />
+          <p class="bips-help">El código BIPS que tendrá el programa resultante de la fusión.</p>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label for="descripcion">Descripción del cambio</label>
+        <textarea id="descripcion" placeholder="Describe qué se debe cambiar, en qué campo o registro, y el valor correcto si aplica."></textarea>
+      </div>
+
+      <div class="form-footer">
+        <button class="btn-secondary" onclick="resetForm()">Limpiar</button>
+        <button class="btn-primary" id="btn-submit" onclick="submitForm()">
+          <div class="spinner" id="spinner"></div>
+          <span id="btn-text">Enviar solicitud</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL LISTADO -->
+  <div class="panel" id="panel-list">
+    <div class="list-header">
+      <span class="list-title">Solicitudes registradas</span>
+      <div class="list-controls">
+        <select class="filter-select" id="filter-estado" onchange="applyFilters()">
+          <option value="">Todos los estados</option>
+          <option value="Pendiente">Pendiente</option>
+          <option value="Aprobado">Aprobado</option>
+          <option value="Implementado">Implementado</option>
+        </select>
+        <select class="filter-select" id="filter-tipo" onchange="applyFilters()">
+          <option value="">Todos los tipos</option>
+          <option value="Agregar">Agregar</option>
+          <option value="Modificar">Modificar</option>
+          <option value="Eliminar">Eliminar</option>
+          <option value="Fusionar">Fusionar</option>
+        </select>
+        <button class="btn-refresh" onclick="loadData()">↻ Actualizar</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Solicitante</th>
+            <th>BIPS</th>
+            <th>Tipo</th>
+            <th>Descripción</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr class="loading-row"><td colspan="6">Cargando solicitudes...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ─── CONFIGURACIÓN ───────────────────────────────────────────────────────────
+  const STORAGE_KEY = 'sheets_url_oferta_publica';
+  let sheetsUrl = localStorage.getItem(STORAGE_KEY) || '';
+  let allRows = [];
+  let bips = [];
+
+  function init() {
+    updateConfigBanner();
+    document.getElementById('bip-input').addEventListener('keydown', handleBipInput);
+    document.querySelectorAll('input[name="tipo"]').forEach(r => r.addEventListener('change', onTipoChange));
+  }
+
+  function updateConfigBanner() {
+    const banner = document.getElementById('config-banner');
+    if (sheetsUrl) {
+      banner.classList.add('hidden');
+    } else {
+      banner.classList.remove('hidden');
+      if (document.getElementById('sheets-url')) {
+        document.getElementById('sheets-url').value = sheetsUrl;
+      }
+    }
+  }
+
+  function toggleConfig() {
+    const panel = document.getElementById('config-panel');
+    panel.classList.toggle('visible');
+    if (panel.classList.contains('visible')) {
+      document.getElementById('sheets-url').value = sheetsUrl;
+    }
+  }
+
+  function saveUrl() {
+    const val = document.getElementById('sheets-url').value.trim();
+    if (!val.startsWith('https://script.google.com')) {
+      showToast('La URL no parece válida. Debe empezar con https://script.google.com', 'error');
+      return;
+    }
+    sheetsUrl = val;
+    localStorage.setItem(STORAGE_KEY, sheetsUrl);
+    updateConfigBanner();
+    document.getElementById('config-panel').classList.remove('visible');
+    showToast('URL guardada correctamente', 'success');
+  }
+
+  // ─── NAVEGACIÓN ──────────────────────────────────────────────────────────────
+  function showPanel(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('visible'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('visible');
+    document.getElementById('btn-' + name).classList.add('active');
+    if (name === 'list') loadData();
+  }
+
+  // ─── TIPO TOGGLE ─────────────────────────────────────────────────────────────
+  function onTipoChange() {
+    const tipo = document.querySelector('input[name="tipo"]:checked')?.value;
+    const esFusionar = tipo === 'Fusionar';
+    document.getElementById('campos-estandar').style.display = esFusionar ? 'none' : 'block';
+    document.getElementById('campos-fusionar').style.display = esFusionar ? 'block' : 'none';
+    if (esFusionar && document.getElementById('programas-list').children.length === 0) {
+      addPrograma();
+      addPrograma();
+    }
+  }
+
+  // ─── BIPS ─────────────────────────────────────────────────────────────────────
+  function handleBipInput(e) {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = e.target.value.trim().replace(/,$/, '');
+      if (val) addBip(val);
+      e.target.value = '';
+    }
+  }
+
+  function addBip(code) {
+    code = code.toUpperCase();
+    if (bips.includes(code)) return;
+    bips.push(code);
+    renderBips();
+  }
+
+  function removeBip(code) {
+    bips = bips.filter(b => b !== code);
+    renderBips();
+  }
+
+  function renderBips() {
+    const container = document.getElementById('bips-tags');
+    container.innerHTML = bips.map(b =>
+      `<span class="bip-tag">${b}<button onclick="removeBip('${b}')" aria-label="Eliminar ${b}">×</button></span>`
+    ).join('');
+  }
+
+  // ─── PROGRAMAS (Fusionar) ─────────────────────────────────────────────────────
+  let programaCount = 0;
+  function addPrograma() {
+    programaCount++;
+    const id = programaCount;
+    const row = document.createElement('div');
+    row.className = 'programa-row';
+    row.id = 'programa-row-' + id;
+    row.innerHTML = `
+      <input type="text" placeholder="Código BIPS" id="prog-bip-${id}" style="font-family:var(--mono);font-size:13px" />
+      <input type="text" placeholder="Nombre del programa" id="prog-nombre-${id}" />
+      <button type="button" class="btn-remove-programa" onclick="removePrograma(${id})" aria-label="Eliminar fila">×</button>`;
+    document.getElementById('programas-list').appendChild(row);
+  }
+
+  function removePrograma(id) {
+    const row = document.getElementById('programa-row-' + id);
+    if (row) row.remove();
+  }
+
+  function getProgramasData() {
+    const rows = document.querySelectorAll('#programas-list .programa-row');
+    const result = [];
+    rows.forEach(row => {
+      const bip = row.querySelector('input:nth-child(1)').value.trim().toUpperCase();
+      const nombre = row.querySelector('input:nth-child(2)').value.trim();
+      if (bip || nombre) result.push(bip + (nombre ? ' - ' + nombre : ''));
+    });
+    return result;
+  }
+
+  // ─── FORMULARIO ──────────────────────────────────────────────────────────────
+  function resetForm() {
+    document.getElementById('solicitante').value = '';
+    document.getElementById('bip-input').value = '';
+    document.getElementById('descripcion').value = '';
+    document.getElementById('bip-final').value = '';
+    document.querySelectorAll('input[name="tipo"]').forEach(r => r.checked = false);
+    bips = [];
+    renderBips();
+    document.getElementById('programas-list').innerHTML = '';
+    document.getElementById('campos-estandar').style.display = 'block';
+    document.getElementById('campos-fusionar').style.display = 'none';
+  }
+
+  async function submitForm() {
+    const solicitante = document.getElementById('solicitante').value.trim();
+    const descripcion = document.getElementById('descripcion').value.trim();
+    const tipo = document.querySelector('input[name="tipo"]:checked')?.value;
+
+    if (!solicitante) { showToast('Por favor ingresa tu nombre.', 'error'); return; }
+    if (!tipo) { showToast('Selecciona el tipo de cambio.', 'error'); return; }
+    if (!sheetsUrl) { showToast('Configura la URL de Google Sheets primero.', 'error'); toggleConfig(); return; }
+
+    let bipsStr = '';
+    let descripcionFinal = descripcion;
+
+    if (tipo === 'Fusionar') {
+      const programas = getProgramasData();
+      const bipFinal = document.getElementById('bip-final').value.trim().toUpperCase();
+      if (programas.length < 2) { showToast('Agrega al menos dos programas a fusionar.', 'error'); return; }
+      if (!bipFinal) { showToast('Ingresa el código BIPS resultante.', 'error'); return; }
+      if (!descripcion) { showToast('Describe el cambio solicitado.', 'error'); return; }
+      bipsStr = bipFinal + ' (resultado)';
+      descripcionFinal = 'Programas a fusionar: ' + programas.join(' | ') + '. ' + descripcion;
+    } else {
+      if (bips.length === 0) { showToast('Agrega al menos un código BIPS.', 'error'); return; }
+      if (!descripcion) { showToast('Describe el cambio solicitado.', 'error'); return; }
+      bipsStr = bips.join(', ');
+    }
+
+    setLoading(true);
+
+    const payload = {
+      fecha: new Date().toLocaleDateString('es-CL'),
+      solicitante,
+      bips: bipsStr,
+      tipo,
+      descripcion: descripcionFinal,
+      estado: 'Pendiente'
+    };
+
+    try {
+      await fetch(sheetsUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      showToast('Solicitud enviada correctamente.', 'success');
+      resetForm();
+    } catch (err) {
+      showToast('Error al enviar. Verifica la URL configurada.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function setLoading(on) {
+    const btn = document.getElementById('btn-submit');
+    const spinner = document.getElementById('spinner');
+    const text = document.getElementById('btn-text');
+    btn.disabled = on;
+    spinner.style.display = on ? 'block' : 'none';
+    text.textContent = on ? 'Enviando...' : 'Enviar solicitud';
+  }
+
+  // ─── JSONP helper (evita bloqueo CORS de Apps Script) ────────────────────────
+  function fetchJsonp(url) {
+    return new Promise((resolve, reject) => {
+      const cb = 'cb_' + Date.now();
+      const script = document.createElement('script');
+      const timeout = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 10000);
+      window[cb] = (data) => { clearTimeout(timeout); cleanup(); resolve(data); };
+      script.onerror = () => { clearTimeout(timeout); cleanup(); reject(new Error('Error')); };
+      script.src = url + '?callback=' + cb;
+      function cleanup() { delete window[cb]; document.head.removeChild(script); }
+      document.head.appendChild(script);
+    });
+  }
+
+  // ─── LISTADO ─────────────────────────────────────────────────────────────────
+  async function loadData() {
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="6">Cargando solicitudes...</td></tr>';
+
+    if (!sheetsUrl) {
+      tbody.innerHTML = '<tr class="loading-row"><td colspan="6">Configura la URL de Google Sheets para ver las solicitudes.</td></tr>';
+      return;
+    }
+
+    try {
+      const data = await fetchJsonp(sheetsUrl);
+      allRows = data.rows || [];
+      applyFilters();
+    } catch (err) {
+      tbody.innerHTML = '<tr class="loading-row"><td colspan="6">Error al cargar. Verifica la URL y vuelve a intentar.</td></tr>';
+    }
+  }
+
+  function applyFilters() {
+    const estado = document.getElementById('filter-estado').value;
+    const tipo = document.getElementById('filter-tipo').value;
+    const filtered = allRows.filter(r =>
+      (!estado || r[5] === estado) &&
+      (!tipo || r[3] === tipo)
+    );
+    renderTable(filtered);
+  }
+
+  function renderTable(rows) {
+    const tbody = document.getElementById('table-body');
+    if (!rows.length) {
+      tbody.innerHTML = `
+        <tr><td colspan="6">
+          <div class="empty-state">
+            <strong>Sin resultados</strong>
+            <p>No hay solicitudes que coincidan con los filtros seleccionados.</p>
+          </div>
+        </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r => {
+      const [fecha, solicitante, bipsStr, tipo, desc, estado] = r;
+      const bipsArr = (bipsStr || '').split(',').map(b => b.trim()).filter(Boolean);
+      const estadoClass = (estado || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      const tipoClass = (tipo || '').toLowerCase();
+
+      return `
+        <tr>
+          <td style="white-space:nowrap;color:var(--text-muted)">${fecha || '—'}</td>
+          <td>${solicitante || '—'}</td>
+          <td>
+            <div class="bips-cell">
+              ${bipsArr.map(b => `<span class="bip-pill">${b}</span>`).join('')}
+            </div>
+          </td>
+          <td><span class="badge badge-${tipoClass}">${tipo || '—'}</span></td>
+          <td><div class="text-desc" title="${(desc||'').replace(/"/g,"'")}">${desc || '—'}</div></td>
+          <td><span class="badge badge-${estadoClass}">${estado || '—'}</span></td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ─── TOAST ───────────────────────────────────────────────────────────────────
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (type ? ' ' + type : '');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  init();
+</script>
+</body>
+</html>
